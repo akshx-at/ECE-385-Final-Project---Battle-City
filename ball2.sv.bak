@@ -1,0 +1,315 @@
+//-------------------------------------------------------------------------
+//    tank.sv                                                            --
+//    Viral Mehta                                                        --
+//    Spring 2005                                                        --
+//                                                                       --
+//    Modified by Stephen Kempf 03-01-2006                               --
+//                              03-12-2007                               --
+//    Translated by Joe Meng    07-07-2013                               --
+//    Fall 2014 Distribution                                             --
+//                                                                       --
+//    For use with ECE 298 Lab 7                                         --
+//    UIUC ECE Department                                                --
+//-------------------------------------------------------------------------
+
+
+module  tank ( input Reset, frame_clk,
+					input [7:0] keycode, keycode1,
+					output bullet_flag,
+					output [1:0] tank1_direction,
+               output [9:0]  tankX, tankY, tankS, BulletX, BulletY, BulletS);
+    
+    logic [9:0] tank_X_Pos, tank_X_Motion, tank_Y_Pos, tank_Y_Motion, tank_Size, Bullet_X_Pos, Bullet_X_Motion, Bullet_Y_Pos, Bullet_Y_Motion, Bullet_Size;
+	 
+    parameter [9:0] tank_X_Center=320;  // Center position on the X axis
+    parameter [9:0] tank_Y_Center=240;  // Center position on the Y axis
+    parameter [9:0] tank_X_Min=0;       // Leftmost point on the X axis
+    parameter [9:0] tank_X_Max=639;     // Rightmost point on the X axis
+    parameter [9:0] tank_Y_Min=0;       // Topmost point on the Y axis
+    parameter [9:0] tank_Y_Max=479;     // Bottommost point on the Y axis
+    parameter [9:0] tank_X_Step=5;      // Step size on the X axis
+    parameter [9:0] tank_Y_Step=5;      // Step size on the Y axis
+	 
+
+
+parameter [9:0] Bullet_X_Center = 320;
+parameter [9:0] Bullet_Y_Center = 240;
+
+
+	 
+    parameter [9:0] Bullet_X_Min=0;       // Leftmost point on the X axis
+    parameter [9:0] Bullet_X_Max=639;     // Rightmost point on the X axis
+    parameter [9:0] Bullet_Y_Min=0;       // Topmost point on the Y axis
+    parameter [9:0] Bullet_Y_Max=479;     // Bottommost point on the Y axis
+	 
+    parameter [9:0] Bullet_X_Step=20;      // Step size on the X axis
+    parameter [9:0] Bullet_Y_Step=20;      // Step size on the Y axis
+	
+	
+	 
+	 logic left_flag = 0;
+	 logic right_flag = 0;
+	 logic up_flag = 0;
+	 logic down_flag = 0;
+	 
+	 // 00 W; 01 A; 10 S; 11 D
+	 logic [1:0] direction;
+	 logic [1:0] bullet_direction;
+	 
+	 logic drawbullet_flag = 0;
+
+	 logic [7:0] lastkeypressed;
+//	 assign lastkeypressed = keycode ;
+
+    assign tank_Size = 100;  // assigns the value  as a 10-digit binary number, ie "0000000100"
+	 
+	 assign Bullet_Size = 2; // assuming the same shit happens to this		
+	 
+   
+    always_ff @ (posedge Reset or posedge frame_clk )
+	 
+    begin: Move_tank
+		
+        if (Reset)  // Asynchronous Reset
+        begin 
+            tank_Y_Motion <= 10'd0; //tank_Y_Step;
+				tank_X_Motion <= 10'd0; //tank_X_Step;
+				tank_Y_Pos <= tank_Y_Center;
+				tank_X_Pos <= tank_X_Center;
+				
+				// how to make our bullet disappear?
+				Bullet_Y_Motion <= 10'd0; //tank_Y_Step;
+				Bullet_X_Motion <= 10'd0; //tank_X_Step;
+//				Bullet_Y_Pos <= Bullet_Y_Center;
+//				Bullet_X_Pos <= Bullet_X_Center;
+//				
+				//Bullet_Size = 0;
+				
+				direction = 2'b00;
+				drawbullet_flag = 0;
+        end
+           
+        else 
+        begin 
+		  
+				 //Bullet_Size = 5;
+				 
+				 // Handling out of bounds for the bullet 
+				 
+		
+				 if ( (tank_Y_Pos + tank_Size) >= tank_Y_Max )  // tank is at the bottom edge, BOUNCE!
+					  //tank_Y_Motion <= (~ (tank_Y_Step) + 1'b1);  // 2's complement.
+					  down_flag = 1;
+					  
+				 else if ( (tank_Y_Pos - tank_Size) <= tank_Y_Min )  // tank is at the top edge, BOUNCE!
+					  //tank_Y_Motion <= tank_Y_Step;
+					  up_flag = 1;
+					  
+				  else if ( (tank_X_Pos + tank_Size) >= tank_X_Max )  // tank is at the Right edge, BOUNCE!
+					  //tank_X_Motion <= (~ (tank_X_Step) + 1'b1);  // 2's complement.
+					  right_flag = 1;
+					  
+				 else if ( (tank_X_Pos - tank_Size) <= tank_X_Min )  // tank is at the Left edge, BOUNCE!
+					  //tank_X_Motion <= tank_X_Step;
+					  left_flag = 1;
+					  
+					  
+				else  begin
+				
+						end
+				if ( ( (Bullet_Y_Pos + Bullet_Size) >= Bullet_Y_Max ) || ( (Bullet_Y_Pos - Bullet_Size) <= Bullet_Y_Min ) || ( (Bullet_X_Pos + Bullet_Size) >= Bullet_X_Max ) || ( (Bullet_X_Pos - Bullet_Size) <= Bullet_X_Min )  )
+						begin 
+							drawbullet_flag = 0;
+						end
+
+//					  tank_Y_Motion <= tank_Y_Motion;  // tank is somewhere in the middle, don't bounce, just keep moving
+					  
+				 case (keycode)
+					8'h04 : begin
+					
+							if (!left_flag) begin
+
+								tank_X_Motion <= -1;//A
+								tank_Y_Motion<= 0;
+								tank_Y_Pos <= (tank_Y_Pos + tank_Y_Motion);  // Update tank position
+								tank_X_Pos <= (tank_X_Pos + tank_X_Motion);
+							
+								direction <= 2'b01;
+//								if (keycode1 == 8'h1A)
+//									tank_Y_Motion<= -1;
+//								else 
+//									tank_Y_Motion<= 0;
+							end
+							else 
+							left_flag = 0;
+						end
+					        
+					8'h07 : begin
+								
+							if (!right_flag) begin
+					        tank_X_Motion <= 1;//D
+							  tank_Y_Motion <= 0;
+							  tank_Y_Pos <= (tank_Y_Pos + tank_Y_Motion);  // Update tank position
+							  tank_X_Pos <= (tank_X_Pos + tank_X_Motion);
+							  direction <= 2'b11;
+							  end
+							 else 
+								right_flag = 0;
+							 end
+
+							  
+					8'h16 : begin
+					
+							if (!down_flag) begin
+					        tank_Y_Motion <= 1;//S
+							  tank_X_Motion <= 0;
+							  tank_Y_Pos <= (tank_Y_Pos + tank_Y_Motion);  // Update tank position
+							  tank_X_Pos <= (tank_X_Pos + tank_X_Motion);
+							  direction <= 2'b10;
+								end
+							else 
+									down_flag = 0;
+							 end
+							  
+					8'h1A : begin
+					
+							if (!up_flag) begin
+					        tank_Y_Motion <= -1;//W
+							  tank_X_Motion <= 0;
+							  tank_Y_Pos <= (tank_Y_Pos + tank_Y_Motion);  // Update tank position
+							  tank_X_Pos <= (tank_X_Pos + tank_X_Motion);
+							  direction <= 2'b00;
+							  end
+							else 
+									up_flag = 0;
+							 end
+							 
+							 
+							 
+					//////////////// A new case to throw the bullet which will be correspondent to another alphabet on the keyboard 
+					8'd44 : begin  // changed this to X to check if there is a problem with the ascii value of the spacebar
+					
+						drawbullet_flag = 1;
+					
+						if(bullet_direction == 2'b10) // s (down)
+							begin 
+							Bullet_X_Motion <= 0;
+							Bullet_Y_Motion<= 3;
+							end
+							
+							
+						if(bullet_direction == 2'b11) // d (right)
+							begin 
+							Bullet_X_Motion <= 3;
+							Bullet_Y_Motion<= 0;
+							end
+						if(bullet_direction == 2'b00) // w (up)
+							begin
+							Bullet_X_Motion <= 0;
+							Bullet_Y_Motion<= -3;
+							end
+								
+						if(bullet_direction == 2'b01) // a (left)
+							begin
+							Bullet_X_Motion <= -3;
+							Bullet_Y_Motion<= 0;
+							end
+							
+						
+						end
+		
+					default: ;
+					
+			   endcase
+				
+			//////////////////////////////////second keycode was pressed s fire //////////////////////////////////////////
+				
+			if(keycode1 == 8'd44)
+			begin
+						drawbullet_flag = 1;
+		
+	
+						if(bullet_direction == 2'b10) // s (down)
+							begin 
+							Bullet_X_Motion <= 0;
+							Bullet_Y_Motion<= 3;
+							end
+							
+							
+						if(bullet_direction == 2'b11) // d (right)
+							begin 
+							Bullet_X_Motion <= 3;
+							Bullet_Y_Motion<= 0;
+							end
+						if(bullet_direction == 2'b00) // w (up)
+							begin
+							Bullet_X_Motion <= 0;
+							Bullet_Y_Motion<= -3;
+							end
+								
+						if(bullet_direction == 2'b01) // a (left)
+							begin
+							Bullet_X_Motion <= -3;
+							Bullet_Y_Motion<= 0;
+							end
+				end
+				
+				////////////////////////////////////////////////////////////////////////////
+				
+				 if (drawbullet_flag == 1)
+				 begin
+					 Bullet_Y_Pos <= (Bullet_Y_Pos + Bullet_Y_Motion);  // Update tank position
+					 Bullet_X_Pos <= (Bullet_X_Pos + Bullet_X_Motion);
+				 end
+				 else 
+				 begin
+				 	 Bullet_Y_Pos <= tank_Y_Pos;  // Update tank position
+					 Bullet_X_Pos <= tank_X_Pos;
+				 end
+
+				 if (drawbullet_flag == 1)
+				 begin
+					 bullet_direction <= bullet_direction;  // Update tank position
+				 end
+				 
+				 else 
+				 begin
+				 	 bullet_direction <= direction;
+				 end
+				 
+				 
+			
+	  /**************************************************************************************
+	    ATTENTION! Please answer the following quesiton in your lab report! Points will be allocated for the answers!
+		 Hidden Question #2/2:
+          Note that tank_Y_Motion in the above statement may have been changed at the same clock edge
+          that is causing the assignment of tank_Y_pos.  Will the new value of tank_Y_Motion be used,
+          or the old?  How will this impact behavior of the tank during a bounce, and how might that 
+          interact with a response to a keypress?  Can you fix it?  Give an answer in your Post-Lab.
+      **************************************************************************************/
+      
+			
+		end  
+		
+    end
+       
+    assign tankX = tank_X_Pos;
+   
+    assign tankY = tank_Y_Pos;
+   
+    assign tankS = tank_Size;
+	 
+	 
+	 assign BulletX = Bullet_X_Pos + 13;
+	 
+	 assign BulletY = Bullet_Y_Pos + 15 ;
+	 
+	 assign BulletS = Bullet_Size;
+	 
+	 assign bullet_flag = drawbullet_flag ;
+	 
+	 assign tank1_direction = direction ;
+	 
+    
+
+endmodule

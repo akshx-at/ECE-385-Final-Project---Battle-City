@@ -1,0 +1,15 @@
+module map_generator (input [9:0] DrawX, DrawY
+							 output [2:0] sprite_signal);
+							
+							
+always_comb begin
+							
+	if ((DrawX >= 100 && DrawX < 140 && DrawY <= 100 && DrawY >= 120) || (DrawX >= 180 && DrawX <= 220 && DrawY <= 100 && DrawY >= 120)) sprite_signal = 3'b001 // set to brick wall
+	
+	else if (DrawX >= 140 && DrawX < 180 && DrawY >= 100 && DrawY <= 120) sprite_signal = 3'b010; // set to breakable
+	
+	else sprite_signal = 3'b000; // background
+														
+end
+
+endmodule

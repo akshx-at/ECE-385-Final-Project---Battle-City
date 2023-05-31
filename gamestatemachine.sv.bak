@@ -1,0 +1,68 @@
+module game_states (input bullet1tank2collision, fsm_clock, reset,
+						  input [7:0] keycode,
+						  output game_on);
+						  
+						  
+
+enum logic [2:0] {halted, game_state, explode1, explode2, explode3} state, next_state;
+						  
+
+
+always_ff @ (posedge fsm_clock) begin
+
+	if (reset) state <= halted;
+	
+	else state <= next_state;
+
+end
+
+
+
+always_comb begin
+
+	next_state = state; // power OF FSM WOW GREAT
+	game_on - 1'b0;
+	
+	unique case (state) 
+
+		halted: if (keycode == 8'd11) next_state = game_state;
+		
+		game_state: if (bullet1tank2collision) next_state = halted;
+		
+		default: next_state = halted;
+		
+	endcase
+	
+	
+	case (state)
+	
+		halted: game_on = 1'b0;
+		
+		game_state: game_on = 1'b1;
+	
+	
+	endcase
+
+	
+end
+
+
+//1st state: start screen, default: some backg, map selection/tank color
+//
+//if enter then
+//
+//2nd state: game state (keep background loaded, encapsulate all background generation logic in a game state variable)
+//
+//
+//move to this state if you hit a bomb or bullet hits you
+//
+//// randomly generate a mine somewhere on the map using bounding logic, hardcoded, using random generation module
+//
+//3rd state: game over (3 substates for explosion animation, 3.1 -> first explosion sprite, 3.2 -> second explosion sprite, 3.3 -> third explosion state)
+//
+
+
+//
+//animate tank fsm, keep moving between 2 states, use counter, move between 0 and 1 for a sprite depending on whether you are at an even or odd count
+//bullet hits wall fsm to show explosion -> so when draw bullet flag drops to 0, this fsm will have a temp signal go up to show explosion and then switch back to regular state (no explosion)...
+//create a flag that goes and draws an explosion in color mapper
