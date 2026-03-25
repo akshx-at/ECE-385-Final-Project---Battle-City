@@ -69,3 +69,11 @@ This project demonstrates practical experience with:
 - VGA graphics pipelines
 - collision detection in hardware
 - integrating external input devices into a digital system
+
+## Key Skills Gained
+
+- Building a complete hardware/software co-designed system from concept to demo
+- Implementing finite state machines and timing-sensitive graphics logic in SystemVerilog
+- Debugging real FPGA behavior across rendering, control, and input subsystems
+- Translating gameplay requirements into hardware modules and embedded support code
+- Collaborating on a larger digital design project with documented tradeoffs and outcomes
