@@ -1,0 +1,9 @@
+*.bak
+*.o
+*.elf
+*.map
+*.objdump
+*.rpt
+db/
+incremental_db/
+usb_kb/obj/
